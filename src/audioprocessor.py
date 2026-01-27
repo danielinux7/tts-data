@@ -29,7 +29,7 @@ class AudioProcessor:
         subprocess.run(cmd)
 
     def run_sequential(self, input_dir, output_dir, mode="process"):
-        """Runs the audio pipeline with multi-point color alerting."""
+        """Runs the audio pipeline and displays a summary of averages."""
         os.makedirs(output_dir, exist_ok=True)
         search_dir = input_dir 
 
@@ -58,27 +58,13 @@ class AudioProcessor:
             i, tp, lra = self.get_ebur128_stats(measure_file)
             crest = abs(tp - i)
             
+            # Accumulate totals for averages
             total_i += i; total_tp += tp; total_lra += lra; total_cf += crest; count += 1
 
             # --- COLOR LOGIC ---
-            
-            # 1. Loudness Alert: Red if drift > ±1.0 from target
-            # (Checks difference between measured 'i' and 'self.target_i')
-            if abs(i - self.target_i) > 1.0:
-                i_color = "\033[93m" # Red
-            else:
-                i_color = "\033[92m" # Green
-
-            # 2. Peak Alert: Red if peak > limit (e.g., -6.0)
-            if tp > self.peak_limit:
-                tp_color = "\033[93m" # Red
-            else:
-                tp_color = "\033[92m" # Green
-
-            # 3. Range (LRA) Alert: Red if outside 3.0 - 7.0
+            i_color = "\033[93m" if abs(i - self.target_i) > 1.0 else "\033[92m"
+            tp_color = "\033[93m" if tp > self.peak_limit else "\033[92m"
             lra_color = "\033[92m" if 3.0 <= lra <= 7.0 else "\033[93m"
-            
-            # 4. Crest Factor Alert: Yellow if < 12
             cf_color = "\033[92m" if crest >= 12 else "\033[93m"
 
             print(f"{f[:24]:<25} | "
@@ -87,4 +73,17 @@ class AudioProcessor:
                   f"{lra_color}{lra:>7.1f} LU{reset} | "
                   f"{cf_color}{crest:>7.2f} dB{reset}")
 
-        # ... (Summary block remains the same)
+        # --- SUMMARY BLOCK ---
+        if count > 0:
+            avg_i = total_i / count
+            avg_tp = total_tp / count
+            avg_lra = total_lra / count
+            avg_cf = total_cf / count
+
+            print("-" * 85)
+            print(f"SUMMARY FOR {count} FILES:")
+            print(f"Average Loudness: {avg_i:>7.2f} LUFS")
+            print(f"Average Peak:     {avg_tp:>7.2f} dBFS")
+            print(f"Average Range:    {avg_lra:>7.2f} LU")
+            print(f"Average Crest:    {avg_cf:>7.2f} dB (Healthy range for speech: 12-18 dB)")
+            print("-" * 85)

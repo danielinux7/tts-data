@@ -23,7 +23,7 @@ def main():
         audio_proc.run_sequential(input_dir, output_dir, mode=args.mode)
 
     # --- MODE 3: METADATA GENERATION ---
-    if args.mode == "metadata" or args.spreadsheet:
+    elif args.mode == "metadata":
         print(f"\n>>> Starting Metadata Phase using: {args.spreadsheet}")
         tm = TextProcessor(args.spreadsheet)
         tm.create_tts_metadata(output_path="data/processed/metadata.csv")
