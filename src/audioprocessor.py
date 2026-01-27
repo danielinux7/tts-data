@@ -70,7 +70,7 @@ class AudioProcessor:
             print(f"{f[:24]:<25} | "
                   f"{i_color}{i:>7.1f} dB{reset} | "
                   f"{tp_color}{tp:>7.1f} dB{reset} | "
-                  f"{lra_color}{lra:>7.1f} LU{reset} | "
+                  f"{lra_color}{lra:>7.1f} dB{reset} | "
                   f"{cf_color}{crest:>7.2f} dB{reset}")
 
         # --- SUMMARY BLOCK ---
@@ -82,8 +82,8 @@ class AudioProcessor:
 
             print("-" * 85)
             print(f"SUMMARY FOR {count} FILES:")
-            print(f"Average Loudness: {avg_i:>7.2f} LUFS")
+            print(f"Average Loudness: {avg_i:>7.2f} dBFS")
             print(f"Average Peak:     {avg_tp:>7.2f} dBFS")
-            print(f"Average Range:    {avg_lra:>7.2f} LU")
+            print(f"Average Range:    {avg_lra:>7.2f} dB")
             print(f"Average Crest:    {avg_cf:>7.2f} dB (Healthy range for speech: 12-18 dB)")
             print("-" * 85)

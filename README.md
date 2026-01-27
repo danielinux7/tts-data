@@ -85,7 +85,7 @@ The script monitors the **Crest Factor**, which is the difference between the **
 
 | Metric | Ideal Range | Description |
 | --- | --- | --- |
-| **Loudness** | -23.0 LUFS | The average perceived volume. |
+| **Loudness** | -23.0 dBFS | The average perceived volume. |
 | **Peak** | -6.0 dBFS | The maximum amplitude limit. |
-| **Range (LRA)** | 3.0 - 7.0 LU | The statistical distribution of loudness. Lower is more consistent for training. |
+| **Range (LRA)** | 3.0 - 7.0 dB | The statistical distribution of loudness. Lower is more consistent for training. |
 | **Crest Factor** | 12.0 - 18.0 dB | Indicates dynamic range; < 12.0 suggests the audio is too compressed/squashed. |
