@@ -9,6 +9,11 @@ data/processed/
 *.wav
 *.mp3
 
+# Text Metadata
+metadata/
+*.csv
+*.xlsx
+
 # Security
 .ssh/
 *.pem

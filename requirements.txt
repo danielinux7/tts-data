@@ -1,1 +1,7 @@
+# Audio Processing
+# (Note: ffmpeg-python is a wrapper; ffmpeg must still be installed on the OS)
 ffmpeg-python
+
+# Data & Text Handling
+pandas
+openpyxl

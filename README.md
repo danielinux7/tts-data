@@ -23,6 +23,7 @@ github-tts-project/
 * **Loudness Normalization:** Targets specific LUFS (default -23) using the `loudnorm` filter for consistency.
 * **Crest Factor Validation:** Automatically calculates the Peak-to-Loudness ratio to ensure audio is not over-compressed.
 * **Format Standardization:** Outputs mono, 24-bit PCM WAV files at 22050Hz (industry standard for TTS).
+* **Metadata Phase:** Converts XLSX/CSV spreadsheets into the pipe-delimited (`|`) format used by industry trainers like Coqui, Piper, and ESPnet.
 
 ## 🛠️ Installation
 
@@ -62,10 +63,19 @@ python3 -m main --mode process --target_lufs 23
 
 Processed files will be saved in `data/processed/`.
 
-### 3. Custom Directory Scans
+### Checking mode
 You can point the tool at any directory to audit audio health:
 ```bash
 python3 -m main --mode check --path data/raw --target_lufs 23
+
+```
+
+### 2. Metadata mode
+
+Align your transcripts from a spreadsheet:
+
+```bash
+python main.py --mode metadata --spreadsheet metadata/metadata.xlsx
 
 ```
 
