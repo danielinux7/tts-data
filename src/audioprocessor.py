@@ -1,0 +1,90 @@
+import os
+import subprocess
+import re
+
+class AudioProcessor:
+    def __init__(self, target_i=-23.0, peak_limit=-6.0):
+        self.target_i = target_i
+        self.peak_limit = peak_limit
+        self.target_sr = 22050
+
+    def get_ebur128_stats(self, file_path):
+        """Extracts Loudness (I), Peak (TP), and Range (LRA) using FFmpeg."""
+        cmd = ["ffmpeg", "-i", file_path, "-filter:a", "ebur128=peak=true", "-f", "null", "-"]
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        output = result.stderr
+        try:
+            i = re.findall(r"I:\s+([\d.-]+)\s+LUFS", output)[-1]
+            tp = re.findall(r"Peak:\s+([\d.-]+)\s+dBFS", output)[-1]
+            lra = re.findall(r"LRA:\s+([\d.-]+)\s+LU", output)[-1] # Added LRA
+            return float(i), float(tp), float(lra)
+        except (IndexError, ValueError):
+            return 0.0, 0.0, 0.0
+
+    def process_file(self, in_p, out_p):
+        """Applies denoiser and normalization filters."""
+        filter_chain = f"afftdn=nr=12:nf=-30, loudnorm=I={self.target_i}:TP={self.peak_limit}:LRA=7"
+        cmd = ["ffmpeg", "-hide_banner", "-v", "error", "-y", "-i", in_p, 
+               "-af", filter_chain, "-c:a", "pcm_s24le", "-ac", "1", "-ar", str(self.target_sr), out_p]
+        subprocess.run(cmd)
+
+    def run_sequential(self, input_dir, output_dir, mode="process"):
+        """Runs the audio pipeline with multi-point color alerting."""
+        os.makedirs(output_dir, exist_ok=True)
+        search_dir = input_dir 
+
+        if not os.path.exists(search_dir):
+            print(f"Error: Directory '{search_dir}' not found.")
+            return
+
+        print(f"{'Filename':<25} | {'Loudness':<10} | {'Peak':<10} | {'Range':<10} | {'Crest':<10}")
+        print("-" * 85)
+
+        total_i = 0; total_tp = 0; total_lra = 0; total_cf = 0; count = 0
+        reset = "\033[0m"
+
+        for f in sorted(os.listdir(search_dir)):
+            if not f.lower().endswith(".wav"): continue
+            
+            in_file = os.path.join(search_dir, f)
+            out_file = os.path.join(output_dir, f)
+
+            if mode != "check":
+                self.process_file(in_file, out_file)
+                measure_file = out_file
+            else:
+                measure_file = in_file
+
+            i, tp, lra = self.get_ebur128_stats(measure_file)
+            crest = abs(tp - i)
+            
+            total_i += i; total_tp += tp; total_lra += lra; total_cf += crest; count += 1
+
+            # --- COLOR LOGIC ---
+            
+            # 1. Loudness Alert: Red if drift > ±1.0 from target
+            # (Checks difference between measured 'i' and 'self.target_i')
+            if abs(i - self.target_i) > 1.0:
+                i_color = "\033[93m" # Red
+            else:
+                i_color = "\033[92m" # Green
+
+            # 2. Peak Alert: Red if peak > limit (e.g., -6.0)
+            if tp > self.peak_limit:
+                tp_color = "\033[93m" # Red
+            else:
+                tp_color = "\033[92m" # Green
+
+            # 3. Range (LRA) Alert: Red if outside 3.0 - 7.0
+            lra_color = "\033[92m" if 3.0 <= lra <= 7.0 else "\033[93m"
+            
+            # 4. Crest Factor Alert: Yellow if < 12
+            cf_color = "\033[92m" if crest >= 12 else "\033[93m"
+
+            print(f"{f[:24]:<25} | "
+                  f"{i_color}{i:>7.1f} dB{reset} | "
+                  f"{tp_color}{tp:>7.1f} dB{reset} | "
+                  f"{lra_color}{lra:>7.1f} LU{reset} | "
+                  f"{cf_color}{crest:>7.2f} dB{reset}")
+
+        # ... (Summary block remains the same)

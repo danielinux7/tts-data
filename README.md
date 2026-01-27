@@ -56,27 +56,26 @@ pip install -r requirements.txt
 Place your raw `.wav` files in `data/raw/` and run:
 
 ```bash
-python src/audio_prep.py --mode process --target 23
+python3 -m main --mode process --target_lufs 23
 
 ```
 
 Processed files will be saved in `data/processed/`.
 
-### Check Mode
-
-To scan and validate audio health for files already in the `data/processed/` folder:
-
+### 3. Custom Directory Scans
+You can point the tool at any directory to audit audio health:
 ```bash
-python src/audio_prep.py --mode check
+python3 -m main --mode check --path data/raw --target_lufs 23
 
 ```
 
 ## 🔬 Understanding the Output
 
-The script monitors the **Crest Factor**, which is the difference between the **True Peak** and the **Integrated Loudness (LUFS)**.
+The script monitors the **Crest Factor**, which is the difference between the **True Peak** and the **Integrated Loudness (LUFS)**, and **Loudness Range** to ensure the audio maintains the quality necessary for natural-sounding TTS.
 
 | Metric | Ideal Range | Description |
 | --- | --- | --- |
-| **Loudness** | -23.0 LUFS | The average perceived loudness of the clip. |
-| **Peak** | -6.0 dBFS | The highest point of the waveform. |
-| **Crest Factor** | 12.0 - 18.0 dB | Indicates the dynamic range. Values below 12.0 are highlighted as "too compressed." |
+| **Loudness** | -23.0 LUFS | The average perceived volume. |
+| **Peak** | -6.0 dBFS | The maximum amplitude limit. |
+| **Range (LRA)** | 3.0 - 7.0 LU | The statistical distribution of loudness. Lower is more consistent for training. |
+| **Crest Factor** | 12.0 - 18.0 dB | Indicates dynamic range; < 12.0 suggests the audio is too compressed/squashed. |
