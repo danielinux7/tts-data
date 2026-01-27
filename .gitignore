@@ -1,0 +1,15 @@
+# Python
+venv/
+__pycache__/
+*.py[cod]
+
+# Audio Data
+data/raw/
+data/processed/
+*.wav
+*.mp3
+
+# Security
+.ssh/
+*.pem
+*.key
