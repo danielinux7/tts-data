@@ -1,5 +1,3 @@
----
-
 # TTS Data Prep Pipeline
 
 A Python-based utility for preparing high-quality audio datasets for Text-to-Speech (TTS) model training. This tool automates denoising, EBU R128 loudness normalization, and audio health validation.
@@ -82,5 +80,3 @@ The script monitors the **Crest Factor**, which is the difference between the **
 | **Loudness** | -23.0 LUFS | The average perceived loudness of the clip. |
 | **Peak** | -6.0 dBFS | The highest point of the waveform. |
 | **Crest Factor** | 12.0 - 18.0 dB | Indicates the dynamic range. Values below 12.0 are highlighted as "too compressed." |
-
----
