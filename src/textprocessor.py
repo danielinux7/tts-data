@@ -7,11 +7,13 @@ class TextProcessor:
         self.input_file = input_file
         self.use_ipa = use_ipa
 
-    def create_tts_metadata(self, output_path="data/processed/metadata.csv"):
+    def create_tts_metadata(self, output_dir):
         """
-        Loads the input file, transliterates transcripts to IPA, 
-        and saves as a pipe-delimited CSV.
+        Refactored to validate audio file existence in output_dir.
+        Only rows with existing audio files are saved to metadata.csv.
         """
+        output_path = os.path.join(output_dir, "metadata.csv")
+        
         # Load the spreadsheet
         if self.input_file.endswith('.xlsx'):
             df = pd.read_excel(self.input_file)
@@ -19,36 +21,55 @@ class TextProcessor:
             df = pd.read_csv(self.input_file)
 
         # Standardizing columns
-        # We assume the input has 'Filename' and 'Transcript'
         df = df[['Filename', 'Transcript']].copy()
-        
-        # Clean the text and apply transliteration
         df['Transcript'] = df['Transcript'].str.strip()
         
-        print(">>> Transliterating Abkhaz Cyrillic to IPA...")
-        # Apply the ab2ipa function to every row in the Transcript column
-        df['IPA_Transcript'] = df['Transcript'].apply(self.ab2ipa)
+        # 1. Check for audio file existence
+        # We assume the 'Filename' column contains the name (e.g., "audio1.wav")
+        print(f">>> Checking for audio files in: {output_dir}")
         
-        # Reorder or select columns for the final TTS format
-        # Format: filename|original_text|ipa_text
+        def file_exists(f_name):
+            # Construct path: output_dir/filename
+            full_audio_path = os.path.join(output_dir, str(f_name))
+            return os.path.isfile(full_audio_path)
+
+        # Create a mask for existing files
+        exists_mask = df['Filename'].apply(file_exists)
         
+        # Log how many files are missing
+        missing_count = len(df) - exists_mask.sum()
+        if missing_count > 0:
+            print(f"--- Warning: {missing_count} audio files not found. Removing from metadata.")
+
+        # Filter the dataframe
+        df = df[exists_mask].copy()
+
+        # 2. Process Transliteration if requested
         if self.use_ipa:
+            print(">>> Transliterating Abkhaz Cyrillic to IPA...")
+            df['IPA_Transcript'] = df['Transcript'].apply(self.ab2ipa)
             final_df = df[['Filename', 'IPA_Transcript']]
         else:
             final_df = df[['Filename', 'Transcript']]
         
-        # Ensure directory exists
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        # 3. Save the validated metadata
+        os.makedirs(output_dir, exist_ok=True)
 
-        # Save with UTF-8 encoding to preserve IPA symbols
-        final_df.to_csv(output_path, sep='|', index=False, header=False, encoding='utf-8', quoting=csv.QUOTE_NONE, escapechar='\\')
+        final_df.to_csv(
+            output_path, 
+            sep='|', 
+            index=False, 
+            header=False, 
+            encoding='utf-8', 
+            quoting=csv.QUOTE_NONE, 
+            escapechar='\\'
+        )
 
-        print(f">>> Metadata created at {output_path} with {len(df)} entries.")
+        print(f">>> Metadata created at {output_path} with {len(final_df)} validated entries.")
 
     def ab2ipa(self, text):
         """
-        Transliterates Abkhaz Cyrillic text into IPA based on the standard
-        literary alphabet and prosodic punctuation.
+        Transliterates Abkhaz Cyrillic to IPA using prosodic punctuation.
         """
         if not isinstance(text, str):
             return ""
@@ -87,7 +108,6 @@ class TextProcessor:
             match = None
             for length in [3, 2, 1]:
                 substring = text[i:i+length]
-                # Capitalize handles most Abkhaz digraphs correctly for lookup
                 lookup = substring.capitalize() if length > 1 else substring.upper()
 
                 if lookup in mapping:
