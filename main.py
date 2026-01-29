@@ -10,7 +10,8 @@ def main():
     parser.add_argument("--target_dbfs", type=float, default=23.0)
     parser.add_argument("--path", type=str, help="Custom directory for audio scans")
     parser.add_argument("--spreadsheet", type=str, help="Path to your transcript spreadsheet (xlsx/csv)", default="metadata/metadata.xlsx")
-    
+    parser.add_argument("--use_ipa", action='store_true', help="Transcript IPA instead of text")
+
     args = parser.parse_args()
 
     # --- MODE 1 & 2: AUDIO PROCESSING & CHECKING ---
@@ -25,7 +26,7 @@ def main():
     # --- MODE 3: METADATA GENERATION ---
     elif args.mode == "metadata":
         print(f"\n>>> Starting Metadata Phase using: {args.spreadsheet}")
-        tm = TextProcessor(args.spreadsheet)
+        tm = TextProcessor(args.spreadsheet, args.use_ipa)
         tm.create_tts_metadata(output_path="data/processed/metadata.csv")
 
     # --- MODE 4: END TO END ---
@@ -38,7 +39,7 @@ def main():
         audio_proc.run_sequential(input_dir, output_dir, mode=args.mode)
 
         print(f"\n>>> Starting Metadata Phase using: {args.spreadsheet}")
-        tm = TextProcessor(args.spreadsheet)
+        tm = TextProcessor(args.spreadsheet, args.use_ipa)
         tm.create_tts_metadata(output_path="data/processed/metadata.csv")
 
     print("\nPipeline execution finished.")
