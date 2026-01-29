@@ -100,6 +100,7 @@ class TextProcessor:
 
             # IPA Prosodic Punctuation
             # '.': ' ‖', ',': ' |', '?': ' ↗', '!': ' ↘', ' ': ' '
+            '…':'.'
         }
 
         output = []
