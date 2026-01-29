@@ -1,19 +1,4 @@
 {
-  "audio": {
-    "sample_rate": 22050
-  },
-  "espeak": {
-    "voice": "ru"
-  },
-  "phoneme_type": "text",
-  "num_symbols": 256,
-  "num_speakers": 1,
-  "inference": {
-    "noise_scale": 0.667,
-    "length_scale": 1.0,
-    "noise_w": 0.8
-  },
-  "phoneme_id_map": {
     "_": [
       0
     ],
@@ -503,8 +488,4 @@
     "͡": [
       162
     ]
-  },
-  "speaker_id_map": {},
-  "hop_length": 256,
-  "piper_version": "1.3.0"
-}
+  }
