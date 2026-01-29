@@ -1,5 +1,5 @@
 import pandas as pd
-import os, re
+import os
 import csv
 
 class TextProcessor:
@@ -121,9 +121,4 @@ class TextProcessor:
             else:
                 output.append(text[i])
                 i += 1
-        output = "".join(output).strip()
-        # To make it Piper compatabile, I need to remove these.
-        output = re.sub(r'd͡', 'd', output)
-        output = re.sub(r't͡', 't', output)
-        output = re.sub(r'ʼ', '', output)
-        return output
+        return "".join(output).strip()
