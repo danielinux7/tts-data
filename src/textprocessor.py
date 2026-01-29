@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import csv
+import unicodedata
 
 class TextProcessor:
     def __init__(self, input_file, use_ipa):
@@ -121,4 +122,4 @@ class TextProcessor:
             else:
                 output.append(text[i])
                 i += 1
-        return "".join(output).strip()
+        return unicodedata.normalize("NFD", "".join(output).strip())
