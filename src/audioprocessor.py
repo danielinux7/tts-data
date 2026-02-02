@@ -1,6 +1,7 @@
 import os
 import subprocess
 import re
+import pandas as pd  # Added for Excel export
 
 class AudioProcessor:
     def __init__(self, target_i=-23.0, peak_limit=-6.0):
@@ -52,10 +53,21 @@ class AudioProcessor:
             print(f"Error: Directory '{search_dir}' not found.")
             return
 
-        print(f"{'Filename':<25} | {'Length':<8} | {'Loudness':<10} | {'Peak':<10} | {'Range':<10} | {'Crest':<10}")
-        print("-" * 95)
+        full_csv_path = os.path.join(output_dir, "metadata.csv")
+        word_counts = {}
+        if os.path.exists(full_csv_path):
+            with open(full_csv_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    parts = line.strip().split("|")
+                    if len(parts) >= 2:
+                        word_counts[parts[0]] = len(parts[1].split())
 
-        total_i = 0; total_tp = 0; total_lra = 0; total_cf = 0; total_duration = 0; count = 0
+        print(f"{'Filename':<25} | {'Length':<8} | {'Words':<5} | {'Loudness':<10} | {'Peak':<10} | {'Range':<10} | {'Crest':<10}")
+        print("-" * 103)
+
+        # --- DATA STORAGE FOR EXCEL ---
+        data_rows = []
+        total_i = 0; total_tp = 0; total_lra = 0; total_cf = 0; total_duration = 0; total_words = 0; count = 0
         reset = "\033[0m"
 
         for f in sorted(os.listdir(search_dir)):
@@ -73,8 +85,20 @@ class AudioProcessor:
             duration = self.get_duration(measure_file)
             i, tp, lra = self.get_ebur128_stats(measure_file)
             crest = abs(tp - i)
+            words = word_counts.get(f, 0)
             
-            total_i += i; total_tp += tp; total_lra += lra; total_cf += crest; total_duration += duration; count += 1
+            # Store data for Excel
+            data_rows.append({
+                "Filename": f,
+                "Length": self.format_time(duration),
+                "Words": words,
+                "Loudness (DBFS)": i,
+                "Peak (dBFS)": tp,
+                "Range (DB)": lra,
+                "Crest Factor (dB)": crest
+            })
+
+            total_i += i; total_tp += tp; total_lra += lra; total_cf += crest; total_duration += duration; total_words += words; count += 1
 
             i_color = "\033[93m" if abs(i - self.target_i) > 1.0 else "\033[92m"
             tp_color = "\033[93m" if tp > self.peak_limit else "\033[92m"
@@ -83,25 +107,46 @@ class AudioProcessor:
 
             print(f"{f[:24]:<25} | "
                   f"{self.format_time(duration):<8} | "
+                  f"{words:<5} | "
                   f"{i_color}{i:>7.1f} dB{reset} | "
                   f"{tp_color}{tp:>7.1f} dB{reset} | "
                   f"{lra_color}{lra:>7.1f} dB{reset} | "
                   f"{cf_color}{crest:>7.2f} dB{reset}")
 
-        # --- SUMMARY BLOCK ---
         if count > 0:
             avg_i = total_i / count
             avg_tp = total_tp / count
             avg_lra = total_lra / count
             avg_cf = total_cf / count
-            avg_duration = total_duration / count # Calculation for Average Length
+            avg_duration = total_duration / count
+            avg_words = total_words / count
 
-            print("-" * 95)
+            # Append Summary Row to data
+            data_rows.append({
+                "Filename": "SUMMARY",
+                "Length": self.format_time(total_duration),
+                "Words": avg_words,
+                "Loudness (DBFS)": avg_i,
+                "Peak (dBFS)": avg_tp,
+                "Range (DB)": avg_lra,
+                "Crest Factor (dB)": avg_cf
+            })
+
+            # --- EXPORT TO EXCEL ---
+            df = pd.DataFrame(data_rows)
+            excel_path = os.path.join(output_dir, "audio_analysis.xlsx")
+            df.to_excel(excel_path, index=False)
+            print("-" * 103)
+            print(f"Results exported to: {excel_path}")
+            print("-" * 103)
+
+            # Original Terminal Summary
             print(f"SUMMARY FOR {count} FILES:")
             print(f"Total Duration:   {self.format_time(total_duration)}")
-            print(f"Average Length:   {self.format_time(avg_duration)}") # Added to Summary
+            print(f"Average Length:   {self.format_time(avg_duration)}")
+            print(f"Average Words:    {avg_words:>7.2f}")
             print(f"Average Loudness: {avg_i:>7.2f} dBFS")
             print(f"Average Peak:     {avg_tp:>7.2f} dBFS")
             print(f"Average Range:    {avg_lra:>7.2f} dB")
-            print(f"Average Crest:    {avg_cf:>7.2f} dB (Healthy range for speech: 12-18 dB)")
-            print("-" * 95)
+            print(f"Average Crest:    {avg_cf:>7.2f} dB")
+            print("-" * 103)
