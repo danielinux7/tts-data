@@ -10,7 +10,7 @@ def main():
     parser.add_argument("--target_dbfs", type=float, default=23.0)
     parser.add_argument("--path_in", type=str, help="Custom directory for raw audio scans")
     parser.add_argument("--path_out", type=str, help="Custom directory for processed audio scans")
-    parser.add_argument("--spreadsheet", type=str, help="Path to your transcript spreadsheet (xlsx/csv)", default="metadata/metadata.xlsx")
+    parser.add_argument("--spreadsheet", type=str, help="Path to your transcript spreadsheet (xlsx/csv)", default="data/raw/metadata.xlsx")
     parser.add_argument("--use_ipa", action='store_true', help="Transcript IPA instead of text")
 
     args = parser.parse_args()

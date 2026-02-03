@@ -46,8 +46,8 @@ class AudioProcessor:
 
     def run_sequential(self, input_dir, output_dir, mode="process"):
         """Runs the audio pipeline and displays a summary of averages."""
-        os.makedirs(output_dir, exist_ok=True)
-        search_dir = input_dir 
+        os.makedirs(output_dir+"/wavs", exist_ok=True)
+        search_dir = input_dir +"/wavs"
 
         if not os.path.exists(search_dir):
             print(f"Error: Directory '{search_dir}' not found.")
@@ -74,7 +74,7 @@ class AudioProcessor:
             if not f.lower().endswith(".wav"): continue
             
             in_file = os.path.join(search_dir, f)
-            out_file = os.path.join(output_dir, f)
+            out_file = os.path.join(output_dir+"/wavs", f)
 
             if mode != "check":
                 self.process_file(in_file, out_file)

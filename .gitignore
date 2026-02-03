@@ -4,13 +4,11 @@ __pycache__/
 *.py[cod]
 
 # Audio Data
+data/
 data/raw/
 data/processed/
 *.wav
 *.mp3
-
-# Text Metadata
-metadata/
 *.csv
 *.xlsx
 

@@ -27,11 +27,11 @@ class TextProcessor:
         
         # 1. Check for audio file existence
         # We assume the 'Filename' column contains the name (e.g., "audio1.wav")
-        print(f">>> Checking for audio files in: {output_dir}")
+        print(f">>> Checking for audio files in: {output_dir+"/wavs"}")
         
         def file_exists(f_name):
             # Construct path: output_dir/filename
-            full_audio_path = os.path.join(output_dir, str(f_name))
+            full_audio_path = os.path.join(output_dir+"/wavs", str(f_name))
             return os.path.isfile(full_audio_path)
 
         # Create a mask for existing files
