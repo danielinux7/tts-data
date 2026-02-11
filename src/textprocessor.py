@@ -2,11 +2,23 @@ import pandas as pd
 import os
 import csv
 import unicodedata
+import json
 
 class TextProcessor:
-    def __init__(self, input_file, use_ipa):
+    def __init__(self, input_file, use_ipa, mapping_file="src/ab2ipa.json"):
         self.input_file = input_file
         self.use_ipa = use_ipa
+        
+        # Initialize mapping with the static punctuation rule from the original code
+        self.mapping = {'…': '.'}
+        
+        if self.use_ipa:
+            if os.path.exists(mapping_file):
+                with open(mapping_file, 'r', encoding='utf-8') as f:
+                    file_mapping = json.load(f)
+                    self.mapping.update(file_mapping)
+            else:
+                print(f"Warning: {mapping_file} not found. IPA transliteration may fail.")
 
     def create_tts_metadata(self, output_dir):
         """
@@ -26,8 +38,7 @@ class TextProcessor:
         df['Transcript'] = df['Transcript'].str.strip()
         
         # 1. Check for audio file existence
-        # We assume the 'Filename' column contains the name (e.g., "audio1.wav")
-        print(f">>> Checking for audio files in: {output_dir+"/wavs"}")
+        print(f">>> Checking for audio files in: {output_dir+'/wavs'}")
         
         def file_exists(f_name):
             # Construct path: output_dir/filename
@@ -70,50 +81,25 @@ class TextProcessor:
 
     def ab2ipa(self, text):
         """
-        Transliterates Abkhaz Cyrillic to IPA using prosodic punctuation.
+        Transliterates Abkhaz Cyrillic to IPA using external JSON mapping.
         """
         if not isinstance(text, str):
             return ""
-
-        mapping = {
-            # Trigraphs
-            'Ӷь': 'ʁʲ', 'Ҕь': 'ʁʲ', 'Ӷә': 'ʁʷ', 'Ҕә': 'ʁʷ',
-            'Ҟь': 'qʲʼ', 'Ҟә': 'qʷʼ',
-
-            # Digraphs
-            'Гь': 'ɡʲ', 'Гә': 'ɡʷ', 'Ӷ': 'ʁ', 'Ҕ': 'ʁ',
-            'Дә': 'dʷ', 'Жь': 'ʒ', 'Жә': 'ʒʷ', 'Ӡә': 'd͡ʑʷ',
-            'Кь': 'kʼʲ', 'Кә': 'kʷʼ', 'Қь': 'kʲʰ', 'Қә': 'kʷʰ',
-            'Ҟ': 'qʼ', 'Ԥ': 'pʰ', 'Ҧ': 'pʰ', 'Тә': 'tʷʼ',
-            'Ҭә': 'tʷʰ', 'Хь': 'χʲ', 'Хә': 'χʷ', 'Ҳә': 'ħʷ',
-            'Цә': 't͡ɕʷ', 'Ҵә': 't͡ɕʷʼ', 'Шь': 'ʃ', 'Шә': 'ʃʷ',
-            'Џь': 'd͡ʒ', 'Ҩ': 'ɥ',
-
-            # Single Letters
-            'А': 'a', 'Б': 'b', 'В': 'v', 'Г': 'ɡ', 'Д': 'd',
-            'Е': 'e', 'Ж': 'ʐ', 'З': 'z', 'Ӡ': 'd͡z', 'И': 'i',
-            'К': 'kʼ', 'Қ': 'kʰ', 'Л': 'l', 'М': 'm', 'Н': 'n',
-            'О': 'o', 'П': 'pʼ', 'Р': 'r', 'С': 's', 'Т': 'tʼ',
-            'Ҭ': 'tʰ', 'У': 'u', 'Ф': 'f', 'Х': 'χ', 'Ҳ': 'ħ',
-            'Ц': 't͡sʰ', 'Ҵ': 't͡sʼ', 'Ч': 't͡ʃʰ', 'Ҷ': 't͡ʃʼ',
-            'Ҽ': 't͡ʂʰ', 'Ҿ': 't͡ʂʼ', 'Ш': 'ʂ', 'Ы': 'ə',
-            'Џ': 'd͡ʐ', 'Ь': 'ʲ', 'Ә': 'ʷ',
-
-            # IPA Prosodic Punctuation
-            # '.': ' ‖', ',': ' |', '?': ' ↗', '!': ' ↘', ' ': ' '
-            '…':'.'
-        }
 
         output = []
         i = 0
         while i < len(text):
             match = None
+            # Iterate through possible token lengths (trigraphs -> digraphs -> single)
             for length in [3, 2, 1]:
                 substring = text[i:i+length]
+                
+                # Maintain original logic: Capitalize digraphs/trigraphs, Uppercase single letters
+                # This ensures we hit the keys in the JSON (e.g. "Гь", "А")
                 lookup = substring.capitalize() if length > 1 else substring.upper()
 
-                if lookup in mapping:
-                    match = mapping[lookup]
+                if lookup in self.mapping:
+                    match = self.mapping[lookup]
                     i += length
                     break
 
