@@ -4,10 +4,11 @@ import re
 import pandas as pd  # Added for Excel export
 
 class AudioProcessor:
-    def __init__(self, target_i=-23.0, peak_limit=-6.0):
+    def __init__(self, target_i=-23.0, peak_limit=-6.0, bit_depth=24):
         self.target_i = target_i
         self.peak_limit = peak_limit
         self.target_sr = 22050
+        self.bit_depth = bit_depth  # Store bit depth
 
     def get_duration(self, file_path):
         """Extracts the duration of the audio file in seconds using ffprobe."""
@@ -40,8 +41,12 @@ class AudioProcessor:
     def process_file(self, in_p, out_p):
         """Applies denoiser and normalization filters."""
         filter_chain = f"afftdn=nr=12:nf=-30, loudnorm=I={self.target_i}:TP={self.peak_limit}:LRA=7"
+        
+        # Construct the codec string based on bit depth (e.g., pcm_s16le, pcm_s24le)
+        codec = f"pcm_s{self.bit_depth}le"
+        
         cmd = ["ffmpeg", "-hide_banner", "-v", "error", "-y", "-i", in_p, 
-               "-af", filter_chain, "-c:a", "pcm_s24le", "-ac", "1", "-ar", str(self.target_sr), out_p]
+               "-af", filter_chain, "-c:a", codec, "-ac", "1", "-ar", str(self.target_sr), out_p]
         subprocess.run(cmd)
 
     def run_sequential(self, input_dir, output_dir, mode="process"):

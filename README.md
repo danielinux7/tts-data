@@ -66,7 +66,7 @@ Processed files will be saved in `data/processed/`.
 ### Checking mode
 You can point the tool at any directory to audit audio health:
 ```bash
-python3 -m main --mode check --path data/raw --target_lufs 23
+python3 -m main --mode check --path data/raw --target_dbfs 23
 
 ```
 
