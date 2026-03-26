@@ -6,7 +6,7 @@ import json
 
 class TextProcessor:
     def __init__(self, input_file, use_ipa, mapping_file="src/ab2ipa.json"):
-        self.input_file = input_file
+        self.input_file = input_file + "/metadata.xlsx"
         self.use_ipa = use_ipa
         
         # Initialize mapping with the static punctuation rule from the original code

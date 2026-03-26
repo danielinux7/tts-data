@@ -26,9 +26,10 @@ def main():
 
     # --- MODE 3: METADATA GENERATION ---
     elif args.mode == "metadata":
+        input_dir = args.path_in if args.path_in else "data/raw"
         output_dir = args.path_out if args.path_out else "data/processed"
-        print(f"\n>>> Starting Metadata Phase using: {args.spreadsheet}")
-        tm = TextProcessor(args.spreadsheet, args.use_ipa)
+        print(f"\n>>> Starting Metadata Phase using: {input_dir}")
+        tm = TextProcessor(input_dir, args.use_ipa)
         tm.create_tts_metadata(output_dir)
 
     # --- MODE 4: END TO END ---
@@ -40,8 +41,8 @@ def main():
         audio_proc = AudioProcessor(target_i=-abs(args.target_dbfs))
         audio_proc.run_sequential(input_dir, output_dir, mode=args.mode)
 
-        print(f"\n>>> Starting Metadata Phase using: {args.spreadsheet}")
-        tm = TextProcessor(args.spreadsheet, args.use_ipa)
+        print(f"\n>>> Starting Metadata Phase using: {input_dir}")
+        tm = TextProcessor(input_dir, args.use_ipa)
         tm.create_tts_metadata(output_dir)
 
     print("\nPipeline execution finished.")

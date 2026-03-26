@@ -57,7 +57,7 @@ pip install -r requirements.txt
 Place your raw `.wav` files in `data/raw/` and run:
 
 ```bash
-python3 -m main --mode process --target_lufs 23
+python3 -m main --mode process --target_dbfs 23 --path_in data/raw --path_out data/processed
 
 ```
 
@@ -66,7 +66,7 @@ Processed files will be saved in `data/processed/`.
 ### Checking mode
 You can point the tool at any directory to audit audio health:
 ```bash
-python3 -m main --mode check --path data/raw --target_dbfs 23
+python3 -m main --mode check --path data/raw --target_dbfs 23 --path_in data/raw --path_out data/processed
 
 ```
 
@@ -75,7 +75,7 @@ python3 -m main --mode check --path data/raw --target_dbfs 23
 Align your transcripts from a spreadsheet:
 
 ```bash
-python main.py --mode metadata --spreadsheet metadata/metadata.xlsx
+python main.py --mode metadata --use_ipa --path_in data/raw --path_out data/processed
 
 ```
 
